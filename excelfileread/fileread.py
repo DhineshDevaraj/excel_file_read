@@ -18,9 +18,6 @@ def main():
     filename = answer.split(":")[1].split("\\")[-1].split(".xlsx")[0]
     df2.to_csv(path + "\\" + filename + ".csv")
 
-    # df2 = df[df['BD TAT'] == 2].groupby(['CENTER_CODE', 'BD TAT'])['BD TAT'].count().reset_index(name="48_hrs_sample")
-    # df3 = df[df['BD TAT'] == 3].groupby(['CENTER_CODE', 'BD TAT'])['BD TAT'].count().reset_index(name="72_hrs_sample")
-
 
 if __name__ == "__main__":
     main()
