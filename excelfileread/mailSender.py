@@ -1,13 +1,16 @@
 import glob
 import smtplib
 from email.message import EmailMessage
+import dataset
+import pathlib
 
 
 def sendmail():
+
     msg = EmailMessage()
     msg['Subject'] = 'Regarding Sample Data'
     msg['From'] = 'Data Team'
-    msg['To'] = 'abc@gamil.com'
+    msg['To'] = dataset.TO_ADDRESS
 
     with open('EmailTemplate.txt') as file:
         data = file.read()
@@ -26,7 +29,7 @@ def sendmail():
             msg.add_attachment(file_data, maintype='application', subtype='png', filename=filename)
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        server.login("email", "password")
+        server.login(dataset.USER_EMAIL, dataset.USER_PASSWORD)
         server.send_message(msg)
 
     print("Email Sent Successfully !!")

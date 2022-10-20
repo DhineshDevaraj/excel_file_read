@@ -1,26 +1,54 @@
+import os.path
 import pathlib
 from subprocess import call
 import matplotlib.pyplot as plt
 import pandas as pd
-
-# jepzzavjhsrsaasl
+from tkinter import filedialog
+from datetime import datetime
+import dataset
+import time
+import sched
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 
 def main():
     try:
-        print("Enter the file path : ")
-        answer = input()
+        path = str(pathlib.Path().resolve())
+        current_date_time = str(datetime.now()).split(" ")[0]
+        path_exists = os.path.exists(path)
+        if not path_exists:
+            os.makedirs(path)
+        # answer = filedialog.askopenfilename()
+        file_list = ["D:/C_S.xlsx", "D:/C_S1.xlsx", "D:/C_S2.xlsx"]
+
+        # check for file extension and read data
+        for extension in file_list:
+            file_extension = extension.split(".")[1]
+            if file_extension == "xlsx":
+                new_excel_list = []
+                # append all the files in list as dataframe
+                for file in file_list:
+                    new_excel_list.append(pd.read_excel(file))
+                merged_excel = pd.DataFrame()
+                # merge all the appended dataframe to new
+                for latest_merged_excel in new_excel_list:
+                    merged_excel = merged_excel.append(latest_merged_excel, ignore_index=True)
+                file_name = "LATEST_MIS_DATA_" + current_date_time
+                # convert the dataframe to new excel file
+                merged_excel.to_excel(path + "\\" + file_name + ".xlsx",
+                                      sheet_name=dataset.data_visualization_sheet_name)
+                answer = path + "\\" + file_name + ".xlsx"
+
+            else:
+                pass
+
     except FileNotFoundError:
         print("File Not Found")
-    try:
-        print("Enter the Sheet Name :")
-        worksheet = input()
-    except IOError:
-        print("Worksheet Not Found")
+
+    worksheet = dataset.data_visualization_sheet_name
 
     # answer = "D:/C_Blood_MIS.xlsx"
     # filename = answer.split(":")[1].split("\\")[-1].split(".xlsx")[0]
-    path = str(pathlib.Path().resolve())
 
     # pandas read Excel file along with workbook
     df = pd.read_excel(answer, worksheet)
@@ -81,33 +109,40 @@ def main():
     df_0_to_48_hrs_df = df_0_48_hrs.loc[:, ['CENTER_CODE', '0_to_48hrs', '0_to_48_hrs_%', 'NO_OF_SAMPLES']] \
         .reset_index(level=0, drop=True)
     df_0_to_48_hrs_df = df_0_to_48_hrs_df.head(10)
-    df_0_to_48_hrs_df.to_excel(path + "\\" + "SAMPLE_RECEIVED_LESS_THAN_48_HRS" + ".xlsx")
+    df_0_to_48_hrs_df.to_excel(path + "\\" + "SAMPLE_RECEIVED_LESS_THAN_48_HRS_" + current_date_time + ".xlsx")
     df_0_to_48_hrs_df.plot.barh(x="CENTER_CODE")
     plt.title('TOP 10 CENTERS BY SAMPLE RECEIVED LESS THAN 48 HRS')
-    plt.savefig(path + "\\" + "SAMPLE_RECEIVED_LESS_THAN_48_HRS" + ".png", dpi=100)
+    plt.savefig(path + "\\" + "SAMPLE_RECEIVED_LESS_THAN_48_HRS_" + current_date_time + ".png", dpi=100)
 
     # rearranging the dataframe for greater than 72 hours
     df_72_hrs_to_higher_df = df_72_hrs.loc[:, ['CENTER_CODE', '72_to_higher', '72_hrs_higher_%', 'NO_OF_SAMPLES']] \
         .reset_index(level=0, drop=True)
     df_72_hrs_to_higher_df = df_72_hrs_to_higher_df.head(10)
-    df_72_hrs_to_higher_df.to_excel(path + "\\" + "SAMPLE_RECEIVED_AFTER_72_HRS" + ".xlsx")
+    df_72_hrs_to_higher_df.to_excel(path + "\\" + "SAMPLE_RECEIVED_AFTER_72_HRS_" + current_date_time + ".xlsx")
     df_72_hrs_to_higher_df.plot.barh(x="CENTER_CODE")
     plt.title('TOP 10 CENTERS BY SAMPLE RECEIVED AFTER 72 HRS')
-    plt.savefig(path + "\\" + "SAMPLE_RECEIVED_AFTER_72_HRS" + ".png", dpi=100)
+    plt.savefig(path + "\\" + "SAMPLE_RECEIVED_AFTER_72_HRS_" + current_date_time + ".png", dpi=100)
 
     # rearranging the dataframe for time between 48 and 72 hours
     df_48_to_72_hrs_df = df_48_to_72_hrs.loc[:, ['CENTER_CODE', '48_to_72hrs', '48_to_72_hrs_%', 'NO_OF_SAMPLES']] \
         .reset_index(level=0, drop=True)
     df_48_to_72_hrs_df = df_48_to_72_hrs_df.head(10)
-    df_48_to_72_hrs_df.to_excel(path + "\\" + "SAMPLE_RECEIVED_BETWEEN_48_TO_72_HRS" + ".xlsx")
+    df_48_to_72_hrs_df.to_excel(path + "\\" + "SAMPLE_RECEIVED_BETWEEN_48_TO_72_HRS_" + current_date_time + ".xlsx")
     df_48_to_72_hrs_df.plot.barh(x='CENTER_CODE')
     plt.title('TOP 10 CENTERS BY SAMPLE RECEIVED MORE THAN 48-72 HRS')
-    plt.savefig(path + "\\" + "SAMPLE_RECEIVED_BETWEEN_48_TO_72_HRS" + ".png", dpi=100)
+    plt.savefig(path + "\\" + "SAMPLE_RECEIVED_BETWEEN_48_TO_72_HRS_" + ".png", dpi=100)
     # plt.show()
     print("Files Have Been Saved Successfully In Current Working Directory !!")
 
+    # call fileread to get all center round off values
+    call(["python", "fileread.py"])
+
     # calling mailsender to send all files
     call(["python", "mailSender.py"])
+
+# scheduler = BlockingScheduler()
+# scheduler.add_job(main, 'interval', seconds=30)
+# scheduler.start()
 
 
 if __name__ == "__main__":
